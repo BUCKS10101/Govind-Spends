@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Govind Spends</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png">
+
+  <!-- Styling -->
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background-color: #f2f2f7;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+    }
+    header {
+      padding: 20px;
+    }
+    h1 {
+      font-size: 1.8em;
+      color: #1d1d1f;
+      margin-bottom: 5px;
+    }
+    p {
+      color: #6e6e73;
+      margin-top: 0;
+    }
+    input {
+      padding: 10px;
+      width: 60%;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      margin: 10px 0;
+    }
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 14px;
+      margin: 5px;
+    }
+    .btn-primary {
+      background-color: #007aff;
+      color: white;
+    }
+    .btn-secondary {
+      background-color: #e5e5ea;
+      color: #1d1d1f;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+    }
+    .card {
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+      margin: 20px;
+      padding: 20px;
+      text-align: left;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    table, th, td {
+      border: 1px solid #ddd;
+    }
+    th, td {
+      padding: 10px;
+      text-align: center;
+    }
+    th {
+      background-color: #f9f9f9;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Govind Spends</h1>
+    <p>Manage your family expenses with ease</p>
+  </header>
+
+  <!-- Login Section -->
+  <div class="container" id="loginSection">
+    <input type="password" id="adminPassword" placeholder="Enter Admin Password">
+    <br>
+    <button class="btn-primary" onclick="login()">Admin Login</button>
+    <button class="btn-secondary" onclick="openParentView()">Parent View</button>
+  </div>
+
+  <!-- Admin Section -->
+  <div class="container" id="adminSection" style="display:none;">
+    <div class="card">
+      <h2>Add Expense</h2>
+      <input type="date" id="date">
+      <input type="text" id="item" placeholder="Item">
+      <input type="number" id="amount" placeholder="Amount">
+      <button class="btn-primary" onclick="addExpense()">Add</button>
+    </div>
+    <div class="card">
+      <h2>Monthly Records</h2>
+      <table id="expenseTable">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Item</th>
+            <th>Amount</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <button class="btn-secondary" onclick="logout()">Back to Login</button>
+  </div>
+
+  <!-- Parent Section -->
+  <div class="container" id="parentSection" style="display:none;">
+    <div class="card">
+      <h2>Monthly Records</h2>
+      <table id="parentExpenseTable">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Item</th>
+            <th>Amount</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <button class="btn-secondary" onclick="logout()">Back to Login</button>
+  </div>
+
+  <!-- JavaScript -->
+  <script>
+    const adminPassword = "1234"; // Change your admin password here
+    let expenses = [];
+
+    function login() {
+      const password = document.getElementById("adminPassword").value;
+      if (password === adminPassword) {
+        document.getElementById("loginSection").style.display = "none";
+        document.getElementById("adminSection").style.display = "block";
+        renderExpenses("expenseTable");
+      } else {
+        alert("Wrong password!");
+      }
+    }
+
+    function openParentView() {
+      document.getElementById("loginSection").style.display = "none";
+      document.getElementById("parentSection").style.display = "block";
+      renderExpenses("parentExpenseTable");
+    }
+
+    function logout() {
+      document.getElementById("loginSection").style.display = "block";
+      document.getElementById("adminSection").style.display = "none";
+      document.getElementById("parentSection").style.display = "none";
+    }
+
+    function addExpense() {
+      const date = document.getElementById("date").value;
+      const item = document.getElementById("item").value;
+      const amount = document.getElementById("amount").value;
+
+      if (date && item && amount) {
+        expenses.push({ date, item, amount });
+        document.getElementById("date").value = "";
+        document.getElementById("item").value = "";
+        document.getElementById("amount").value = "";
+        renderExpenses("expenseTable");
+        renderExpenses("parentExpenseTable");
+      } else {
+        alert("Please fill all fields!");
+      }
+    }
+
+    function renderExpenses(tableId) {
+      const tableBody = document.getElementById(tableId).getElementsByTagName("tbody")[0];
+      tableBody.innerHTML = "";
+      expenses.forEach(expense => {
+        let row = tableBody.insertRow();
+        row.insertCell(0).innerText = expense.date;
+        row.insertCell(1).innerText = expense.item;
+        row.insertCell(2).innerText = expense.amount;
+      });
+    }
+  </script>
+</body>
+</html>
