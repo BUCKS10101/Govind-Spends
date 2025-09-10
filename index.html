@@ -1,207 +1,619 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Govind Spends</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Family Expense Planner</title>
 
-  <!-- Favicon -->
-    <!-- App Icons & Manifest -->
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
-  <link rel="apple-touch-icon" href="icon-192.png">
-  <meta name="theme-color" content="#007aff">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-
-  <!-- Styling -->
   <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-      background-color: #f2f2f7;
-      margin: 0;
-      padding: 0;
-      text-align: center;
+    /* ---------- iOS-like theme ---------- */
+    :root{
+      --ios-blue:#007AFF;
+      --ios-green:#34C759;
+      --ios-red:#FF3B30;
+      --ios-yellow:#FFCC00;
+      --ios-orange:#FF9500;
+      --ios-purple:#AF52DE;
+      --bg:#fff;
+      --card:#ffffff;
+      --muted:#8e8e93;
     }
-    header {
-      padding: 20px;
+    html,body{height:100%;margin:0;background:#f2f2f7;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#111;}
+    .center-wrap{min-height:100%;display:flex;align-items:flex-start;justify-content:center;padding:36px 16px;}
+    .app {
+      width:100%;
+      max-width:980px;
+      background:linear-gradient(180deg,#fbfbfd, #f9f9fb);
+      border-radius:20px;
+      padding:20px;
+      box-shadow:0 8px 30px rgba(0,0,0,0.08);
     }
-    h1 {
-      font-size: 1.8em;
-      color: #1d1d1f;
-      margin-bottom: 5px;
-    }
-    p {
-      color: #6e6e73;
-      margin-top: 0;
-    }
-    input {
-      padding: 10px;
-      width: 60%;
-      border-radius: 10px;
-      border: 1px solid #ccc;
-      margin: 10px 0;
-    }
-    button {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      font-size: 14px;
-      margin: 5px;
-    }
-    .btn-primary {
-      background-color: #007aff;
-      color: white;
-    }
-    .btn-secondary {
-      background-color: #e5e5ea;
-      color: #1d1d1f;
-    }
-    .container {
-      max-width: 800px;
-      margin: auto;
-    }
-    .card {
-      background: white;
-      border-radius: 15px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-      margin: 20px;
-      padding: 20px;
-      text-align: left;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 15px;
-    }
-    table, th, td {
-      border: 1px solid #ddd;
-    }
-    th, td {
-      padding: 10px;
-      text-align: center;
-    }
-    th {
-      background-color: #f9f9f9;
+
+    /* Header */
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;}
+    .title{font-size:20px;font-weight:700;color:var(--ios-blue);}
+
+    /* Login screen */
+    #loginScreen{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:64px 12px;background:var(--card);border-radius:12px;}
+    #loginScreen h1{font-size:22px;margin-bottom:6px;}
+    #loginScreen p{color:var(--muted);margin-bottom:18px;}
+    .input-field{width:100%;max-width:360px;padding:12px 14px;border:1px solid #d9d9db;border-radius:12px;font-size:15px;margin-bottom:12px;outline:none;}
+
+    /* Buttons */
+    .row {display:flex;gap:10px;align-items:center;}
+    button.btn {padding:10px 14px;border-radius:12px;border:none;cursor:pointer;font-weight:600;font-size:14px;}
+    button.primary {background:var(--ios-blue);color:#fff;}
+    button.ghost {background:#f2f2f7;color:var(--ios-blue);}
+    button.ghost:hover{filter:brightness(.98)}
+    .small {padding:8px 10px;font-size:13px;border-radius:10px;}
+
+    /* Controls */
+    .controls {display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:12px 0;}
+    select, input[type="number"]{padding:8px 10px;border-radius:10px;border:1px solid #e2e2e6;background:white}
+
+    /* Table card */
+    .card {background:var(--card);border-radius:16px;padding:14px;box-shadow:0 6px 18px rgba(0,0,0,0.06);margin-bottom:18px;}
+    .card-title{font-weight:700;margin-bottom:8px;color:#111;}
+
+    .table-scroll{overflow:auto;border-radius:12px;}
+    table {width:100%;border-collapse:collapse;font-size:14px;}
+    thead th{position:sticky;top:0;background:var(--ios-blue);color:#fff;padding:10px 12px;text-align:left;font-weight:700;font-size:13px;}
+    tbody td{padding:10px 12px;border-bottom:1px solid #eee;vertical-align:middle;}
+    tbody tr:nth-child(even) td{background:#fbfbfd;}
+    .date-col{font-weight:600;color:#111;width:110px;}
+
+    input.cell-input{width:100%;padding:8px;border-radius:8px;border:1px solid #e6e6ea;font-size:14px;background:transparent;}
+    input.cell-input:focus{outline:2px solid rgba(0,122,255,0.12);box-shadow:0 0 0 4px rgba(0,122,255,0.06);}
+
+    .read-cell{padding:8px 6px;}
+
+    /* Chart container */
+    .chart-row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start;}
+    .chart-card{flex:1;min-width:260px;max-width:640px;}
+
+    /* PDF card */
+    .pdf-card{display:flex;align-items:center;gap:12px;border-radius:12px;padding:12px;background:var(--card);box-shadow:0 6px 16px rgba(0,0,0,0.06);cursor:pointer;border:1px solid #eee;}
+    .pdf-icon{width:48px;height:48px;border-radius:8px;background:linear-gradient(145deg,#f2f2f7,#fff);display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--ios-blue);box-shadow:inset 0 -2px 4px rgba(0,0,0,0.04);}
+    .pdf-meta{flex:1;}
+    .pdf-name{font-weight:600}
+    .pdf-sub{font-size:13px;color:var(--muted)}
+
+    /* PDF modal (slide up) */
+    .pdf-modal{position:fixed;left:0;top:0;width:100%;height:100%;display:none;align-items:flex-end;justify-content:center;background:rgba(0,0,0,0.45);z-index:9999;opacity:0;transition:opacity .25s ease}
+    .pdf-modal.active{display:flex;opacity:1}
+    .pdf-sheet{width:100%;max-width:900px;height:86%;background:white;border-radius:16px 16px 0 0;box-shadow:0 -6px 30px rgba(0,0,0,0.25);transform:translateY(110%);transition:transform .28s ease}
+    .pdf-modal.active .pdf-sheet{transform:translateY(0)}
+    .pdf-sheet-header{display:flex;justify-content:center;padding:10px;border-bottom:1px solid #efefef}
+    .pdf-drag{width:36px;height:4px;border-radius:3px;background:#e6e6ea}
+    .pdf-sheet-body{height:calc(100% - 48px);overflow:hidden}
+    .pdf-frame{width:100%;height:100%;border:none}
+
+    /* small helpers */
+    .muted{color:var(--muted)}
+    .spacer{height:12px}
+    @media (max-width:720px){
+      .date-col{width:86px;font-size:13px}
+      thead th{font-size:12px}
+      tbody td{font-size:13px;padding:8px}
     }
   </style>
 </head>
 <body>
+  <div class="center-wrap">
+    <div class="app" id="app">
 
-  <header>
-    <h1>Govind Spends</h1>
-    <p>Manage your family expenses with ease</p>
-  </header>
+      <!-- Top -->
+      <div class="topbar">
+        <div class="title">Family Expense Planner</div>
+        <div id="topActions"></div>
+      </div>
 
-  <!-- Login Section -->
-  <div class="container" id="loginSection">
-    <input type="password" id="adminPassword" placeholder="Enter Admin Password">
-    <br>
-    <button class="btn-primary" onclick="login()">Admin Login</button>
-    <button class="btn-secondary" onclick="openParentView()">Parent View</button>
+      <!-- Login Screen (default) -->
+      <div id="loginScreen" class="card" style="display:block">
+        <h3 style="margin:0 0 6px 0">Admin Login</h3>
+        <p class="muted" style="margin-top:0">Enter admin password or open Parent View</p>
+        <input id="pwInput" class="input-field" type="password" placeholder="Admin password (default: admin123)" />
+        <div style="display:flex;gap:10px;justify-content:center;margin-top:8px;">
+          <button class="btn primary" onclick="doLogin()">Admin Login</button>
+          <button class="btn ghost" onclick="openParentView()">Parent View</button>
+        </div>
+        <p style="margin-top:10px;text-align:center" class="muted">Tip: change admin password in code if needed</p>
+      </div>
+
+      <!-- Admin Dashboard -->
+      <div id="adminView" style="display:none">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+            <div>
+              <div class="card-title">Admin — Monthly Expenses</div>
+              <div class="muted">Edit daily values per category for the selected month</div>
+            </div>
+
+            <div style="display:flex;gap:8px;align-items:center;">
+              <label class="muted">Month</label>
+              <select id="monthSelect"></select>
+              <label class="muted">Year</label>
+              <select id="yearSelect"></select>
+              <button class="btn ghost small" onclick="generateTableFromSelectors()">Generate</button>
+            </div>
+          </div>
+
+          <div class="spacer"></div>
+
+          <!-- Table -->
+          <div class="card" style="padding:8px;">
+            <div class="table-scroll">
+              <table id="adminTable">
+                <thead>
+                  <tr id="adminHeaderRow"><th>Date</th></tr>
+                </thead>
+                <tbody id="adminBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Chart + PDF upload -->
+          <div class="chart-row">
+            <div class="chart-card card">
+              <div class="card-title">Expense Breakdown (totals)</div>
+              <canvas id="adminChart" style="max-height:320px"></canvas>
+            </div>
+
+            <div style="min-width:260px;max-width:320px">
+              <div class="card">
+                <div class="card-title">Statements</div>
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                  <input id="pdfUploader" type="file" accept="application/pdf" />
+                  <div id="pdfListAdmin"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:10px;">
+            <button class="btn ghost" onclick="openParentView()">Open Parent View</button>
+            <button class="btn" onclick="logout()">Logout</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Parent Dashboard -->
+      <div id="parentView" style="display:none">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <div class="card-title">Parent View</div>
+              <div class="muted">Read-only monthly table, totals and statements</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <label class="muted">Month</label>
+              <select id="parentMonthSelect"></select>
+              <label class="muted">Year</label>
+              <select id="parentYearSelect"></select>
+              <button class="btn ghost small" onclick="generateParentFromSelectors()">Show</button>
+            </div>
+          </div>
+
+          <div class="spacer"></div>
+
+          <div class="chart-row">
+            <div class="chart-card card">
+              <div class="card-title">Expense Breakdown (totals)</div>
+              <canvas id="parentChart"></canvas>
+            </div>
+
+            <div style="min-width:260px;max-width:320px">
+              <div class="card">
+                <div class="card-title">Statements</div>
+                <div id="pdfListParent"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="spacer"></div>
+
+          <div class="card">
+            <div class="card-title">Monthly Data (read-only)</div>
+            <div class="table-scroll">
+              <table id="parentTable">
+                <thead>
+                  <tr id="parentHeaderRow"><th>Date</th></tr>
+                </thead>
+                <tbody id="parentBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;">
+            <button class="btn ghost" onclick="openAdmin()">Admin (login)</button>
+            <button class="btn" onclick="backToLogin()">Back to Login</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
   </div>
 
-  <!-- Admin Section -->
-  <div class="container" id="adminSection" style="display:none;">
-    <div class="card">
-      <h2>Add Expense</h2>
-      <input type="date" id="date">
-      <input type="text" id="item" placeholder="Item">
-      <input type="number" id="amount" placeholder="Amount">
-      <button class="btn-primary" onclick="addExpense()">Add</button>
+  <!-- PDF preview modal -->
+  <div id="pdfModal" class="pdf-modal" aria-hidden="true">
+    <div class="pdf-sheet">
+      <div class="pdf-sheet-header"><div class="pdf-drag"></div></div>
+      <div class="pdf-sheet-body">
+        <iframe id="pdfFrame" class="pdf-frame"></iframe>
+      </div>
     </div>
-    <div class="card">
-      <h2>Monthly Records</h2>
-      <table id="expenseTable">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Item</th>
-            <th>Amount</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
-    <button class="btn-secondary" onclick="logout()">Back to Login</button>
   </div>
 
-  <!-- Parent Section -->
-  <div class="container" id="parentSection" style="display:none;">
-    <div class="card">
-      <h2>Monthly Records</h2>
-      <table id="parentExpenseTable">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Item</th>
-            <th>Amount</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
-    <button class="btn-secondary" onclick="logout()">Back to Login</button>
-  </div>
+<script>
+/* ----------------- Data & Settings ----------------- */
+const CATEGORIES = ['food','transport','debt','loan','personalCare','entertainment','savings','income','notes'];
+const CATEGORY_LABELS = ['Food','Transport','Debt','Loan','Personal Care','Entertainment','Savings','Income','Notes'];
+const STORAGE_KEY = 'fe_expenses_v1';
+const PDF_KEY = 'fe_pdfs_v1';
+const ADMIN_PW = 'admin123';
 
-  <!-- JavaScript -->
-  <script>
-    const adminPassword = "1234"; // Change your admin password here
-    let expenses = [];
+let expenseData = {}; // object keyed by "YYYY-M" (monthKey) -> { "1-food": "200", ... }
+let pdfData = {};     // object keyed by monthKey -> { dataUrl: ..., name: ... }
+let adminChart = null;
+let parentChart = null;
+let saveTimer = null;
 
-    function login() {
-      const password = document.getElementById("adminPassword").value;
-      if (password === adminPassword) {
-        document.getElementById("loginSection").style.display = "none";
-        document.getElementById("adminSection").style.display = "block";
-        renderExpenses("expenseTable");
+/* ----------------- Utils ----------------- */
+function monthKey(year, monthZeroBased){ return `${year}-${monthZeroBased}`; }
+function monthName(m){ return new Date(2000, m, 1).toLocaleString('default',{month:'long'}); }
+function daysInMonth(year, monthZeroBased){ return new Date(year, monthZeroBased+1, 0).getDate(); }
+
+/* ----------------- Persistence ----------------- */
+function loadFromStorage(){
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    expenseData = raw ? JSON.parse(raw) : {};
+  } catch(e){ expenseData = {}; console.warn('load error',e); }
+
+  try {
+    const raw2 = localStorage.getItem(PDF_KEY);
+    pdfData = raw2 ? JSON.parse(raw2) : {};
+  } catch(e){ pdfData = {}; console.warn('pdf load err',e); }
+}
+
+function saveToStorageDebounced(){
+  if(saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(expenseData));
+    localStorage.setItem(PDF_KEY, JSON.stringify(pdfData));
+    // small visual feedback could be added
+  }, 400);
+}
+
+/* ----------------- UI init (months/years) ----------------- */
+function populateMonthYearSelectors(){
+  const now = new Date();
+  const mSel = document.getElementById('monthSelect');
+  const pMSel = document.getElementById('parentMonthSelect');
+  const ySel = document.getElementById('yearSelect');
+  const pYSel = document.getElementById('parentYearSelect');
+
+  // months
+  mSel.innerHTML = pMSel.innerHTML = '';
+  for(let i=0;i<12;i++){
+    const opt = document.createElement('option'); opt.value=i; opt.text = monthName(i);
+    mSel.appendChild(opt);
+    pMSel.appendChild(opt.cloneNode(true));
+  }
+  // years: from now-3 to now+2
+  ySel.innerHTML = pYSel.innerHTML = '';
+  const curYear = now.getFullYear();
+  for(let y = curYear-3; y<=curYear+2; y++){
+    const o = document.createElement('option'); o.value = y; o.text = y;
+    ySel.appendChild(o); pYSel.appendChild(o.cloneNode(true));
+  }
+
+  // defaults to current month/year
+  mSel.value = now.getMonth();
+  pMSel.value = now.getMonth();
+  ySel.value = pYSel.value = now.getFullYear();
+}
+
+/* ----------------- Table generation (Admin) ----------------- */
+function generateTableFromSelectors(){
+  const m = parseInt(document.getElementById('monthSelect').value,10);
+  const y = parseInt(document.getElementById('yearSelect').value,10);
+  generateAdminTable(y,m);
+  showAdminPDFList(y,m);
+  updateAdminChart(y,m);
+}
+
+function generateAdminTable(year, monthZero){
+  const key = monthKey(year, monthZero);
+  if(!expenseData[key]) expenseData[key] = {}; // ensure month exists
+  const days = daysInMonth(year, monthZero);
+
+  // Header row (categories)
+  const headerRow = document.getElementById('adminHeaderRow');
+  headerRow.innerHTML = '<th>Date</th>';
+  CATEGORY_LABELS.forEach(label => {
+    headerRow.innerHTML += `<th>${label}</th>`;
+  });
+
+  // Body
+  const body = document.getElementById('adminBody');
+  body.innerHTML = '';
+  for(let d=1; d<=days; d++){
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td class="date-col">${monthName(monthZero)} ${d}</td>`;
+    for(const cat of CATEGORIES){
+      const cellKey = `${d}-${cat}`;
+      const existing = expenseData[key][cellKey] ?? '';
+      if(cat === 'notes'){
+        tr.innerHTML += `<td><input class="cell-input" type="text" value="${escapeHtml(existing)}" data-key="${cellKey}" /></td>`;
       } else {
-        alert("Wrong password!");
+        tr.innerHTML += `<td><input class="cell-input" type="number" step="0.01" value="${existing}" data-key="${cellKey}" /></td>`;
       }
     }
+    body.appendChild(tr);
+  }
 
-    function openParentView() {
-      document.getElementById("loginSection").style.display = "none";
-      document.getElementById("parentSection").style.display = "block";
-      renderExpenses("parentExpenseTable");
+  // attach listeners
+  body.querySelectorAll('input.cell-input').forEach(inp=>{
+    inp.addEventListener('input', function(e){
+      const k = this.dataset.key;
+      const val = this.value;
+      expenseData[key][k] = val;
+      saveToStorageDebounced();
+      updateAdminChart(year,monthZero);
+      updateParentTableIfVisible(year,monthZero);
+    });
+  });
+
+  // show pdf list & chart
+  showAdminPDFList(year,monthZero);
+  updateAdminChart(year,monthZero);
+}
+
+/* ----------------- Parent table generation (read-only) ----------------- */
+function generateParentFromSelectors(){
+  const m = parseInt(document.getElementById('parentMonthSelect').value,10);
+  const y = parseInt(document.getElementById('parentYearSelect').value,10);
+  generateParentTable(y,m);
+  showParentPDFList(y,m);
+  updateParentChart(y,m);
+}
+
+function generateParentTable(year, monthZero){
+  const key = monthKey(year, monthZero);
+  const days = daysInMonth(year, monthZero);
+  const headerRow = document.getElementById('parentHeaderRow');
+  headerRow.innerHTML = '<th>Date</th>';
+  CATEGORY_LABELS.forEach(label => headerRow.innerHTML += `<th>${label}</th>`);
+
+  const body = document.getElementById('parentBody');
+  body.innerHTML = '';
+  const data = expenseData[key] || {};
+
+  for(let d=1; d<=days; d++){
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td class="date-col">${monthName(monthZero)} ${d}</td>`;
+    for(const cat of CATEGORIES){
+      const k = `${d}-${cat}`;
+      const v = data[k] ?? '';
+      tr.innerHTML += `<td class="read-cell">${escapeHtml(v)}</td>`;
     }
+    body.appendChild(tr);
+  }
 
-    function logout() {
-      document.getElementById("loginSection").style.display = "block";
-      document.getElementById("adminSection").style.display = "none";
-      document.getElementById("parentSection").style.display = "none";
-    }
+  showParentPDFList(year, monthZero);
+  updateParentChart(year,monthZero);
+}
 
-    function addExpense() {
-      const date = document.getElementById("date").value;
-      const item = document.getElementById("item").value;
-      const amount = document.getElementById("amount").value;
-
-      if (date && item && amount) {
-        expenses.push({ date, item, amount });
-        document.getElementById("date").value = "";
-        document.getElementById("item").value = "";
-        document.getElementById("amount").value = "";
-        renderExpenses("expenseTable");
-        renderExpenses("parentExpenseTable");
-      } else {
-        alert("Please fill all fields!");
+/* ----------------- Charts ----------------- */
+function calcTotalsForMonth(year,monthZero){
+  const key = monthKey(year,monthZero), data = expenseData[key]||{};
+  const totals = CATEGORIES.map(cat=>{
+    if(cat==='notes') return 0;
+    let s=0;
+    Object.keys(data).forEach(k=>{
+      if(k.endsWith(`-${cat}`)){
+        s += parseFloat(data[k])||0;
       }
-    }
+    });
+    return s;
+  });
+  return totals;
+}
 
-    function renderExpenses(tableId) {
-      const tableBody = document.getElementById(tableId).getElementsByTagName("tbody")[0];
-      tableBody.innerHTML = "";
-      expenses.forEach(expense => {
-        let row = tableBody.insertRow();
-        row.insertCell(0).innerText = expense.date;
-        row.insertCell(1).innerText = expense.item;
-        row.insertCell(2).innerText = expense.amount;
-      });
-    }
-  </script>
-  <script src="sw-register.js"></script>
+function updateAdminChart(year,monthZero){
+  const totals = calcTotalsForMonth(year,monthZero);
+  drawOrUpdateChart('adminChart', totals);
+}
+function updateParentChart(year,monthZero){
+  const totals = calcTotalsForMonth(year,monthZero);
+  drawOrUpdateChart('parentChart', totals);
+}
+function drawOrUpdateChart(canvasId, totals){
+  const labels = CATEGORY_LABELS.filter((c,i)=>CATEGORIES[i] !== 'notes');
+  const colors = ['#007AFF','#34C759','#FF3B30','#FFCC00','#FF9500','#AF52DE','#5AC8FA','#FFCC00','#FF9500'];
+  // reduce colors to categories (exclude 'notes')
+  const usedColors = [];
+  for(let i=0;i<CATEGORIES.length;i++){
+    if(CATEGORIES[i] !== 'notes') usedColors.push(colors[i % colors.length]);
+  }
 
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  // Remove existing chart instance if any
+  if(canvasId==='adminChart' && adminChart) { adminChart.destroy(); adminChart = null; }
+  if(canvasId==='parentChart' && parentChart) { parentChart.destroy(); parentChart = null; }
+
+  const dataset = {
+    labels: labels,
+    datasets: [{
+      data: totals.filter((_,i)=>CATEGORIES[i] !== 'notes'),
+      backgroundColor: usedColors,
+      borderWidth: 0
+    }]
+  };
+  const cfg = { type:'pie', data:dataset, options:{responsive:true,plugins:{legend:{position:'bottom',labels:{boxWidth:12}}}} };
+  const chartObj = new Chart(ctx, cfg);
+  if(canvasId==='adminChart') adminChart = chartObj;
+  if(canvasId==='parentChart') parentChart = chartObj;
+}
+
+/* ----------------- PDF handling ----------------- */
+function showAdminPDFList(year, monthZero){
+  const container = document.getElementById('pdfListAdmin');
+  container.innerHTML = '';
+  const key = monthKey(year,monthZero);
+  if(pdfData[key]){
+    const p = pdfData[key];
+    const card = document.createElement('div');
+    card.className = 'pdf-card';
+    card.innerHTML = `<div class="pdf-icon">📄</div><div class="pdf-meta"><div class="pdf-name">${escapeHtml(p.name)}</div><div class="pdf-sub">${p.name}</div></div>`;
+    card.addEventListener('click', ()=>openPDF(p.dataUrl));
+    container.appendChild(card);
+  } else {
+    const info = document.createElement('div');
+    info.className = 'muted';
+    info.textContent = 'No statement uploaded for this month.';
+    container.appendChild(info);
+  }
+}
+
+function showParentPDFList(year, monthZero){
+  const container = document.getElementById('pdfListParent');
+  container.innerHTML = '';
+  const key = monthKey(year,monthZero);
+  if(pdfData[key]){
+    const p = pdfData[key];
+    const card = document.createElement('div');
+    card.className = 'pdf-card';
+    card.innerHTML = `<div class="pdf-icon">📄</div><div class="pdf-meta"><div class="pdf-name">${escapeHtml(p.name)}</div><div class="pdf-sub">Tap to preview</div></div>`;
+    card.addEventListener('click', ()=>openPDF(p.dataUrl));
+    container.appendChild(card);
+  } else {
+    const info = document.createElement('div');
+    info.className = 'muted';
+    info.textContent = 'No statement available for this month.';
+    container.appendChild(info);
+  }
+}
+
+/* PDF upload read -> store dataURL in pdfData[monthKey] */
+document.addEventListener('DOMContentLoaded', ()=>{
+  const uploader = document.getElementById('pdfUploader');
+  uploader.addEventListener('change', function(e){
+    const file = e.target.files[0];
+    if(!file) return;
+    if(file.type !== 'application/pdf'){ alert('Please upload a PDF file'); return; }
+    const reader = new FileReader();
+    reader.onload = function(evt){
+      // store as dataURL
+      const dataUrl = evt.target.result;
+      const m = parseInt(document.getElementById('monthSelect').value,10);
+      const y = parseInt(document.getElementById('yearSelect').value,10);
+      const key = monthKey(y,m);
+      pdfData[key] = { dataUrl, name: file.name };
+      saveToStorageDebounced();
+      showAdminPDFList(y,m);
+      showParentPDFList(y,m);
+      alert('Statement uploaded & saved for ' + monthName(m) + ' ' + y);
+      uploader.value = ''; // reset
+    };
+    reader.readAsDataURL(file);
+  });
+});
+
+/* PDF preview modal */
+const pdfModal = document.getElementById('pdfModal');
+const pdfFrame = document.getElementById('pdfFrame');
+pdfModal.addEventListener('click', (e)=>{ if(e.target === pdfModal){ closePDF(); }});
+function openPDF(dataUrl){
+  if(!dataUrl) return;
+  pdfFrame.src = dataUrl;
+  pdfModal.classList.add('active');
+}
+function closePDF(){
+  pdfModal.classList.remove('active');
+  setTimeout(()=>{ pdfFrame.src = ''; }, 280);
+}
+
+/* ----------------- Helpers & navigation ----------------- */
+function escapeHtml(str){
+  if(str === undefined || str === null) return '';
+  return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+function doLogin(){
+  const v = document.getElementById('pwInput').value;
+  if(v === ADMIN_PW){
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminView').style.display = 'block';
+    // set month selectors and generate
+    populateMonthYearSelectors();
+    const ms = document.getElementById('monthSelect'), ys = document.getElementById('yearSelect');
+    generateAdminTable(parseInt(ys.value,10), parseInt(ms.value,10));
+    showAdminPDFList(parseInt(ys.value,10), parseInt(ms.value,10));
+  } else {
+    alert('Incorrect password');
+  }
+}
+
+function logout(){
+  // go back to login
+  document.getElementById('adminView').style.display = 'none';
+  document.getElementById('parentView').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'block';
+}
+
+function openParentView(){
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('adminView').style.display = 'none';
+  document.getElementById('parentView').style.display = 'block';
+  populateMonthYearSelectors();
+  // default show current month
+  const ms = document.getElementById('parentMonthSelect'), ys = document.getElementById('parentYearSelect');
+  generateParentTable(parseInt(ys.value,10), parseInt(ms.value,10));
+  showParentPDFList(parseInt(ys.value,10), parseInt(ms.value,10));
+  updateParentChart(parseInt(ys.value,10), parseInt(ms.value,10));
+}
+
+function generateParentFromSelectors(){ generateParentFromSelectors(); } // shim for button use
+
+function generateParentFromSelectors(){ // actual
+  const m = parseInt(document.getElementById('parentMonthSelect').value,10);
+  const y = parseInt(document.getElementById('parentYearSelect').value,10);
+  generateParentTable(y,m);
+  showParentPDFList(y,m);
+  updateParentChart(y,m);
+}
+
+function updateParentTableIfVisible(year,month){
+  // if parent view currently showing same month, refresh
+  const pv = document.getElementById('parentView').style.display !== 'none';
+  const pm = parseInt(document.getElementById('parentMonthSelect').value,10);
+  const py = parseInt(document.getElementById('parentYearSelect').value,10);
+  if(pv && pm===month && py===year){
+    generateParentTable(year,month);
+    updateParentChart(year,month);
+  }
+}
+
+/* ----------------- boot ----------------- */
+(function boot(){
+  loadFromStorage();
+  populateMonthYearSelectors();
+
+  // If storage has months, pick the most recent for quick preview
+  const keys = Object.keys(expenseData);
+  if(keys.length>0){
+    // try to show parent by default with latest
+    const last = keys.sort().reverse()[0];
+    const [y,m] = last.split('-').map(Number);
+    document.getElementById('parentMonthSelect').value = m;
+    document.getElementById('parentYearSelect').value = y;
+  }
+})();
+</script>
 </body>
 </html>
